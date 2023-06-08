@@ -8,7 +8,7 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri =
   "mongodb+srv://schoolDb:jhuorUxtvBrLMt4w@cluster0.37kn8jw.mongodb.net/?retryWrites=true&w=majority";
 
@@ -56,6 +56,26 @@ async function run() {
       const result = await selectedClassCollection.insertOne(data);
       return res.send(result);
     });
+
+    app.get("/selectedClasses", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        return res.send([]);
+      }
+      const query = { email: email };
+      const result = await selectedClassCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.delete('/selectedClasses/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await selectedClassCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
