@@ -32,6 +32,8 @@ async function run() {
       .collection("selectedClass");
     const allClassCollection = client.db("schoolDb").collection("allClass");
 
+    const addClassCollection = client.db("schoolDb").collection("addclass");
+
     /* User  */
     app.post("/users", async (req, res) => {
       const user = req.body;
@@ -67,16 +69,40 @@ async function run() {
       res.send(result);
     });
 
-    app.delete('/selectedClasses/:id', async (req, res) => {
+    app.delete("/selectedClasses/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedClassCollection.deleteOne(query);
       res.send(result);
-    })
+    });
 
+    /* instructor/admin */
 
+    app.get("/users/admin/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await usersCollection.findOne(query);
+      const result = { role: user?.role || null };
+      res.send(result);
+    });
+    /* - - --- ------ */
 
+    app.post("/addclass", async (req, res) => {
+      const data = req.body;
+      const result = await addClassCollection.insertOne(data);
+      return res.send(result);
+    });
 
+    app.get("/addclass", async (req, res) => {
+      const email = req.query.email;
+      if (!email) {
+        return res.send([]);
+      }
+      const query = { instructorEmail: email };
+      const result = await addClassCollection.find(query).toArray();
+      res.send(result);
+    });
+    /* - - --- ------ */
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
