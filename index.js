@@ -48,8 +48,8 @@ async function run() {
     });
 
     /* All class */
-    app.get("/classes", async (req, res) => {
-      const data = await allClassCollection.find({}).toArray();
+    app.get("/addclass", async (req, res) => {
+      const data = await addClassCollection.find({}).toArray();
       return res.send(data);
     });
 
@@ -86,7 +86,7 @@ async function run() {
       res.send(result);
     });
     /* - - --- ------ */
-
+    // http://localhost:5000/addclass
     app.post("/addclass", async (req, res) => {
       const data = req.body;
       const result = await addClassCollection.insertOne(data);
@@ -94,14 +94,23 @@ async function run() {
     });
 
     app.get("/addclass", async (req, res) => {
-      const email = req.query.email;
-      if (!email) {
-        return res.send([]);
-      }
-      const query = { instructorEmail: email };
-      const result = await addClassCollection.find(query).toArray();
+      const result = await addClassCollection.find().toArray();
       res.send(result);
     });
+
+   
+    app.get("/addclasses", async (req, res) => {
+      const email = req.query.email;
+      if (email) {
+        const query = { instructorEmail: email };
+        const result = await addClassCollection.find(query).toArray();
+        res.send(result);
+      } else {
+        const result = await addClassCollection.find().toArray();
+        res.send(result);
+      }
+    });
+    
     /* - - --- ------ */
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
