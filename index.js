@@ -140,8 +140,23 @@ async function run() {
       const result = await addClassCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-    /*  */
-  
+    /* Feedback */
+    app.put("/addClass/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const { feedback } = req.body;
+    
+      const updateDoc = {
+        $set: {
+          feedback: feedback,
+        },
+      };
+    
+      const result = await addClassCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    
+
     /* - - --- ------ */
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
