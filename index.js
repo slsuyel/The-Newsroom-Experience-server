@@ -86,7 +86,7 @@ async function run() {
       res.send(result);
     });
     /* - - --- ------ */
-    // http://localhost:5000/addclass
+
     app.post("/addclass", async (req, res) => {
       const data = req.body;
       const result = await addClassCollection.insertOne(data);
@@ -109,6 +109,9 @@ async function run() {
         res.send(result);
       }
     });
+
+    /* update class instructor */
+
     /* Admin */
 
     app.delete("/addclass/:id", async (req, res) => {
@@ -117,15 +120,6 @@ async function run() {
       const result = await addClassCollection.deleteOne(query);
       res.send(result);
     });
-    // update statuse
-    /* TODO */
-    /*  app.put('/addclass/:id', async (req, res) => {
-      const classId = req.params.id;
-      const newStatus =JSON.stringify(req.body.status);
-      const classItem = await addClassCollection.findOne({ _id:new ObjectId(classId) });
-      const result = classItem.status = newStatus
-      res.send(result);
-    }); */
 
     app.patch("/addClass/:id", async (req, res) => {
       const id = req.params.id;
@@ -145,17 +139,25 @@ async function run() {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const { feedback } = req.body;
-    
+
       const updateDoc = {
         $set: {
           feedback: feedback,
         },
       };
-    
+
       const result = await addClassCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
-    
+
+    /* Manage Users */
+
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
+      res.send(result);
+    });
+
+
 
     /* - - --- ------ */
     // Send a ping to confirm a successful connection
