@@ -98,7 +98,6 @@ async function run() {
       res.send(result);
     });
 
-   
     app.get("/addclasses", async (req, res) => {
       const email = req.query.email;
       if (email) {
@@ -118,8 +117,31 @@ async function run() {
       const result = await addClassCollection.deleteOne(query);
       res.send(result);
     });
+    // update statuse
+    /* TODO */
+    /*  app.put('/addclass/:id', async (req, res) => {
+      const classId = req.params.id;
+      const newStatus =JSON.stringify(req.body.status);
+      const classItem = await addClassCollection.findOne({ _id:new ObjectId(classId) });
+      const result = classItem.status = newStatus
+      res.send(result);
+    }); */
 
-
+    app.patch("/addClass/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedData = req.body;
+      console.log(updatedData);
+      const updateDoc = {
+        $set: {
+          status: updatedData.status,
+        },
+      };
+      const result = await addClassCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    /*  */
+  
     /* - - --- ------ */
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
