@@ -157,8 +157,19 @@ async function run() {
       res.send(result);
     });
 
-
-
+    /* make role */
+    app.put("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const { role } = req.body;
+      const updateDoc = {
+        $set: {
+          role: role,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
     /* - - --- ------ */
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
