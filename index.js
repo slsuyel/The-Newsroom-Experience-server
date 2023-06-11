@@ -30,7 +30,7 @@ async function run() {
     const selectedClassCollection = client
       .db("schoolDb")
       .collection("selectedClass");
-    const allClassCollection = client.db("schoolDb").collection("allClass");
+    // const allClassCollection = client.db("schoolDb").collection("allClass");
 
     const addClassCollection = client.db("schoolDb").collection("addclass");
 
@@ -49,7 +49,8 @@ async function run() {
 
     /* All class */
     app.get("/addclass", async (req, res) => {
-      const data = await addClassCollection.find({}).toArray();
+      const query = { status : "approved" };
+      const data = await addClassCollection.find(query).toArray();
       return res.send(data);
     });
 
