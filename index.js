@@ -49,7 +49,7 @@ async function run() {
 
     /* All class */
     app.get("/addclass", async (req, res) => {
-      const query = { status : "approved" };
+      const query = { status: "approved" };
       const data = await addClassCollection.find(query).toArray();
       return res.send(data);
     });
@@ -94,10 +94,10 @@ async function run() {
       return res.send(result);
     });
 
-    app.get("/addclass", async (req, res) => {
-      const result = await addClassCollection.find().toArray();
-      res.send(result);
-    });
+    // app.get("/addclass", async (req, res) => {
+    //   const result = await addClassCollection.find().toArray();
+    //   res.send(result);
+    // });
 
     app.get("/addclasses", async (req, res) => {
       const email = req.query.email;
@@ -158,7 +158,6 @@ async function run() {
       res.send(result);
     });
 
-   
     /* make role */
     app.put("/users/:id", async (req, res) => {
       const id = req.params.id;
