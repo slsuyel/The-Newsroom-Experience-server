@@ -4,7 +4,7 @@ const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
-const stripe = require("stripe")(process.env.PAYMENT_STRIPE_SK)
+const stripe = require("stripe")(process.env.PAYMENT_STRIPE_SK);
 
 // middleware
 app.use(cors());
@@ -174,6 +174,25 @@ async function run() {
       res.send(result);
     });
     /* - - --- ------ */
+
+    // Payment
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+
+
+    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
