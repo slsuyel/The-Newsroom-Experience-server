@@ -26,13 +26,16 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     const usersCollection = client.db("schoolDb").collection("users");
     const selectedClassCollection = client
       .db("schoolDb")
       .collection("selectedClass");
     // const allClassCollection = client.db("schoolDb").collection("allClass");
+
+    const paymentCollection = client.db("bistroDb").collection("payments");
+
 
     const addClassCollection = client.db("schoolDb").collection("addclass");
 
@@ -189,6 +192,15 @@ async function run() {
         clientSecret: paymentIntent.client_secret,
       });
     });
+
+    //payment done
+    app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      const insertResult = await paymentCollection.insertOne(payment);
+      const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
+      const deleteResult = await cartCollection.deleteMany(query)
+      res.send({ insertResult, deleteResult });
+    })
 
 
 
