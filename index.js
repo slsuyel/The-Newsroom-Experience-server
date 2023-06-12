@@ -202,7 +202,16 @@ async function run() {
       const deletedClass = await selectedClassCollection.deleteOne(query);
       res.send({ insertResult, deletedClass });
     });
-    
+
+    app.get("/payments", async (req, res) => {
+      const email = req.query.email;
+      const payments = await paymentCollection
+        .find({ email })
+        .sort({ date: -1 })
+        .toArray();
+      res.send(payments);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
