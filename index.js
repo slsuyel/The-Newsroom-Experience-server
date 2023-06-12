@@ -34,8 +34,7 @@ async function run() {
       .collection("selectedClass");
     // const allClassCollection = client.db("schoolDb").collection("allClass");
 
-    const paymentCollection = client.db("bistroDb").collection("payments");
-
+    const paymentCollection = client.db("schoolDb").collection("payments");
 
     const addClassCollection = client.db("schoolDb").collection("addclass");
 
@@ -194,17 +193,16 @@ async function run() {
     });
 
     //payment done
-    app.post('/payments', async (req, res) => {
+
+    app.post("/payments", async (req, res) => {
       const payment = req.body;
       const insertResult = await paymentCollection.insertOne(payment);
-      const query = { _id: { $in: payment.cartItems.map(id => new ObjectId(id)) } }
-      const deleteResult = await cartCollection.deleteMany(query)
-      res.send({ insertResult, deleteResult });
-    })
-
-
-
-
+      const insertId = payment.classId;
+      const query = { _id: new ObjectId(insertId) };
+      const deletedClass = await selectedClassCollection.deleteOne(query);
+      res.send({ insertResult, deletedClass });
+    });
+    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
