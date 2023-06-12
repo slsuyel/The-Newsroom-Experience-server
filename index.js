@@ -4,6 +4,8 @@ const cors = require("cors");
 require("dotenv").config();
 const port = process.env.PORT || 5000;
 
+const stripe = require("stripe")(process.env.PAYMENT_STRIPE_SK)
+
 // middleware
 app.use(cors());
 app.use(express.json());
