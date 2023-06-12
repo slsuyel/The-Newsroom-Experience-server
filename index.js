@@ -117,6 +117,22 @@ async function run() {
 
     /* update class instructor */
 
+    app.patch("/classupdate/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+
+      const updateDoc = {
+        $set: {
+          className: req.body.className,
+          availableSeats: req.body.availableSeats,
+          price: req.body.price,
+        },
+      };
+      const result = await addClassCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    /*  */
     /* Admin */
 
     app.delete("/addclass/:id", async (req, res) => {
