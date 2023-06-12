@@ -1,4 +1,7 @@
 const express = require("express");
+
+const jwt = require("jsonwebtoken");
+
 const app = express();
 const cors = require("cors");
 require("dotenv").config();
@@ -9,6 +12,26 @@ const stripe = require("stripe")(process.env.PAYMENT_STRIPE_SK);
 // middleware
 app.use(cors());
 app.use(express.json());
+
+const verifyJWT = (req, res, next) => {
+  const authorization = req.headers.authorization;
+  if (!authorization) {
+    return res
+      .status(401)
+      .send({ error: true, message: "unauthorized access" });
+  }
+  // bearer token
+  const token = authorization.split(" ")[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res
+        .status(401)
+        .send({ error: true, message: "unauthorized access" });
+    }
+    req.decoded = decoded;
+    next();
+  });
+};
 
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
@@ -26,7 +49,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    // await client.connect();
+     await client.connect();
 
     const usersCollection = client.db("schoolDb").collection("users");
     const selectedClassCollection = client
@@ -38,8 +61,19 @@ async function run() {
 
     const addClassCollection = client.db("schoolDb").collection("addclass");
 
+    /* JWT START */
+
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res.send({ token });
+    });
+
+    /* --------------- */
     /* User  */
-    app.post("/users", async (req, res) => {
+    app.post("/users",verifyJWT, async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
@@ -58,23 +92,24 @@ async function run() {
       return res.send(data);
     });
 
-    app.post("/selectedClasses", async (req, res) => {
+    app.post("/selectedClasses",verifyJWT, async (req, res) => {
       const data = req.body;
       const result = await selectedClassCollection.insertOne(data);
       return res.send(result);
     });
 
-    app.get("/selectedClasses", async (req, res) => {
+    app.get("/selectedClasses",verifyJWT, async (req, res) => {
       const email = req.query.email;
       if (!email) {
         return res.send([]);
       }
+
       const query = { email: email };
       const result = await selectedClassCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.delete("/selectedClasses/:id", async (req, res) => {
+    app.delete("/selectedClasses/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await selectedClassCollection.deleteOne(query);
@@ -92,7 +127,7 @@ async function run() {
     });
     /* - - --- ------ */
 
-    app.post("/addclass", async (req, res) => {
+    app.post("/addclass", verifyJWT, async (req, res) => {
       const data = req.body;
       const result = await addClassCollection.insertOne(data);
       return res.send(result);
@@ -117,7 +152,7 @@ async function run() {
 
     /* update class instructor */
 
-    app.patch("/classupdate/:id", async (req, res) => {
+    app.patch("/classupdate/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
 
@@ -135,14 +170,14 @@ async function run() {
     /*  */
     /* Admin */
 
-    app.delete("/addclass/:id", async (req, res) => {
+    app.delete("/addclass/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await addClassCollection.deleteOne(query);
       res.send(result);
     });
 
-    app.patch("/addClass/:id", async (req, res) => {
+    app.patch("/addClass/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const updatedData = req.body;
@@ -156,7 +191,7 @@ async function run() {
       res.send(result);
     });
     /* Feedback */
-    app.put("/addClass/:id", async (req, res) => {
+    app.put("/addClass/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const { feedback } = req.body;
@@ -173,13 +208,13 @@ async function run() {
 
     /* Manage Users */
 
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJWT, async (req, res) => {
       const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
     /* make role */
-    app.put("/users/:id", async (req, res) => {
+    app.put("/users/:id", verifyJWT, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
       const { role } = req.body;
@@ -194,7 +229,7 @@ async function run() {
     /* - - --- ------ */
 
     // Payment
-    app.post("/create-payment-intent", async (req, res) => {
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
       const { price } = req.body;
       const amount = parseInt(price * 100);
       const paymentIntent = await stripe.paymentIntents.create({
@@ -210,7 +245,7 @@ async function run() {
 
     //payment done
 
-    app.post("/payments", async (req, res) => {
+    app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
       const insertResult = await paymentCollection.insertOne(payment);
       const insertId = payment.classId;
@@ -219,7 +254,7 @@ async function run() {
       res.send({ insertResult, deletedClass });
     });
 
-    app.get("/payments", async (req, res) => {
+    app.get("/payments", verifyJWT, async (req, res) => {
       const email = req.query.email;
       const payments = await paymentCollection
         .find({ email })
