@@ -49,17 +49,16 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-     await client.connect();
+    //await client.connect();
+
+    const addClassCollection = client.db("schoolDb").collection("addclass");
 
     const usersCollection = client.db("schoolDb").collection("users");
     const selectedClassCollection = client
       .db("schoolDb")
       .collection("selectedClass");
-    // const allClassCollection = client.db("schoolDb").collection("allClass");
 
     const paymentCollection = client.db("schoolDb").collection("payments");
-
-    const addClassCollection = client.db("schoolDb").collection("addclass");
 
     /* JWT START */
 
@@ -73,7 +72,7 @@ async function run() {
 
     /* --------------- */
     /* User  */
-    app.post("/users",verifyJWT, async (req, res) => {
+    app.post("/users", verifyJWT, async (req, res) => {
       const user = req.body;
       const query = { email: user.email };
       const existingUser = await usersCollection.findOne(query);
@@ -92,13 +91,13 @@ async function run() {
       return res.send(data);
     });
 
-    app.post("/selectedClasses",verifyJWT, async (req, res) => {
+    app.post("/selectedClasses", verifyJWT, async (req, res) => {
       const data = req.body;
       const result = await selectedClassCollection.insertOne(data);
       return res.send(result);
     });
 
-    app.get("/selectedClasses",verifyJWT, async (req, res) => {
+    app.get("/selectedClasses", verifyJWT, async (req, res) => {
       const email = req.query.email;
       if (!email) {
         return res.send([]);
@@ -249,12 +248,21 @@ async function run() {
       const payment = req.body;
       const insertResult = await paymentCollection.insertOne(payment);
       const insertId = payment.classId;
+      const mainId = payment.main_id;
       const query = { _id: new ObjectId(insertId) };
+      const filter = { _id: new ObjectId(mainId) };
+      const updateDoc = {
+        $set: {
+          availableSeats: parseInt(payment.availableSeats, 10) - 1,
+        },
+      };
+      const reduceSeats = await addClassCollection.updateOne(filter, updateDoc);
       const deletedClass = await selectedClassCollection.deleteOne(query);
-      res.send({ insertResult, deletedClass });
+      res.send({ insertResult, deletedClass ,reduceSeats});
     });
 
-    app.get("/payments", verifyJWT, async (req, res) => {
+    /*  */
+    app.get("/payments", async (req, res) => {
       const email = req.query.email;
       const payments = await paymentCollection
         .find({ email })
