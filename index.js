@@ -246,6 +246,7 @@ async function run() {
 
     app.post("/payments", verifyJWT, async (req, res) => {
       const payment = req.body;
+    
       const insertResult = await paymentCollection.insertOne(payment);
       const insertId = payment.classId;
       const mainId = payment.main_id;
@@ -254,11 +255,12 @@ async function run() {
       const updateDoc = {
         $set: {
           availableSeats: parseInt(payment.availableSeats, 10) - 1,
+          totalEnroll: parseInt(payment.totalEnroll, 10) + 1,
         },
       };
       const reduceSeats = await addClassCollection.updateOne(filter, updateDoc);
       const deletedClass = await selectedClassCollection.deleteOne(query);
-      res.send({ insertResult, deletedClass ,reduceSeats});
+      res.send({ insertResult, deletedClass, reduceSeats });
     });
 
     /*  */
